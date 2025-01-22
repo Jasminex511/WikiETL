@@ -11,8 +11,11 @@ kafka_config = {
 
 consumer = Consumer(kafka_config)
 
-def consume_and_process(topic):
+def consume_and_process(topic, output_dir):
     consumer.subscribe([topic])
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     while True:
         msg = consumer.poll(1.0)
@@ -27,7 +30,8 @@ def consume_and_process(topic):
 
         if os.path.exists(file_path):
             profile_data = process_file(file_path)
-            output_path = file_path.replace(".xml", "_profile.json")
+            output_filename = os.path.basename(file_path).replace(".xml", "_profile.json")
+            output_path = os.path.join(output_dir, output_filename)
 
             with open(output_path, "w", encoding="utf-8") as output_file:
                 json.dump(profile_data, output_file, indent=4)
@@ -35,7 +39,8 @@ def consume_and_process(topic):
         else:
             print(f"File not found: {file_path}")
 
-        consumer.close()
+    consumer.close()
 
 topic_name = "test_topic"
-consume_and_process(topic_name)
+output_directory = "output"
+consume_and_process(topic_name, output_directory)
