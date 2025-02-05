@@ -36,5 +36,3 @@ def extract_person_pages(html_path):
                 elem.clear()
     print(result)
     return result
-
-extract_person_pages("sample_html/enwiki-20241101-pages-articles-multistream1.xml")
