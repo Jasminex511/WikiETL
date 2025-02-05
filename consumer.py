@@ -1,7 +1,7 @@
 from confluent_kafka import Consumer
 import json
 import os
-from process_data import process_file
+from extract_pages import extract_person_pages
 
 kafka_config = {
     'bootstrap.servers': 'localhost:9092',
@@ -29,18 +29,19 @@ def consume_and_process(topic, output_dir):
         print(f"Processing file: {file_path}")
 
         if os.path.exists(file_path):
-            profile_data = process_file(file_path)
+            person_pages = extract_person_pages(file_path)
+            for page in person_pages:
+                # TODO: send to consumer2.py, which calls keyword_generation.py
             output_filename = os.path.basename(file_path).replace(".xml", "_profile.json")
             output_path = os.path.join(output_dir, output_filename)
 
             with open(output_path, "w", encoding="utf-8") as output_file:
-                json.dump(profile_data, output_file, indent=4)
             print(f"Saved profile data to: {output_path}")
         else:
             print(f"File not found: {file_path}")
 
     consumer.close()
 
-topic_name = "test_topic"
+topic_name = "parse_html"
 output_directory = "output"
 consume_and_process(topic_name, output_directory)

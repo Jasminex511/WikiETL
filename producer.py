@@ -28,6 +28,6 @@ def produce_html_files(directory, topic):
     producer.flush()
 
 
-directory_path = "files"
-topic_name = "test_topic"
+directory_path = "sample_html"
+topic_name = "parse_html"
 produce_html_files(directory_path, topic_name)
