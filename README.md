@@ -1,2 +1,2 @@
-`producer.py` sends raw HTML to the `<parse_html>` Kafka topic, where `consumer.py` reads and parses it into individual person pages using `extract_pages`. \
-These pages are then sent to the `<extract_data>` topic by `producer2.py`. `consumer2.py` reads and processes each person page, calling `extract_data`, which utilizes an OpenAI LLM to extract key details. The extracted data is then stored in MongoDB.
+`producer.py` sends raw HTML to the `<parse_html>` Kafka topic, where `consumer.py` reads and parses it into individual person pages using `extract_pages.py`. \
+These pages are then sent to the `<extract_data>` topic by `producer2.py`. `consumer2.py` reads and processes each person page, calling `extract_data.py`, which utilizes an OpenAI LLM to extract key details. The extracted data is then stored in MongoDB.
