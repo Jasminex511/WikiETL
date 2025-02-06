@@ -8,9 +8,9 @@ def extract_person_pages(html_path):
     with open(html_path, "r", encoding="utf-8") as file:
         context = ET.iterparse(file, events=("start", "end"))
 
-        i = 0
+        i = 1
         for event, elem in context:
-            if i > 0:
+            if i > 10:
                 break
             if event == "end" and elem.tag == f"{{{namespaces['mediawiki']}}}page":
                 title = ""
@@ -34,5 +34,5 @@ def extract_person_pages(html_path):
                         i += 1
 
                 elem.clear()
-    print(result)
+
     return result

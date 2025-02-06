@@ -21,7 +21,7 @@ def produce_html_files(directory, topic):
     for filename in os.listdir(directory):
         file_path = os.path.join(directory, filename)
 
-        if os.path.isfile(file_path):
+        if os.path.isfile(file_path) and '.xml' in filename:
             print(f"Producing: {file_path}")
             producer.produce(topic, file_path, callback=delivery_report)
 

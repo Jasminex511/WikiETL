@@ -1,7 +1,7 @@
 from confluent_kafka import Consumer
 import os
-from extract_pages import extract_person_pages
-from producer2 import produce_pages
+from extract_data import extract_profile_info
+import json
 
 kafka_config = {
     'bootstrap.servers': 'localhost:9092',
@@ -10,6 +10,7 @@ kafka_config = {
 }
 
 consumer = Consumer(kafka_config)
+
 
 def consume_and_process(topic):
     consumer.subscribe([topic])
@@ -22,18 +23,22 @@ def consume_and_process(topic):
             print(f"Consumer error: {msg.error()}")
             continue
 
-        file_path = msg.value().decode('utf-8')
-        print(f"Processing file: {file_path}")
+        print(f"Calling extract_profile_info...")
+        profile = extract_profile_info(msg.value().decode('utf-8'))
 
+        file_path = "output/data_profile.json"
         if os.path.exists(file_path):
-            person_pages = extract_person_pages(file_path)
-            print(f"Extracted {len(person_pages)} pages.")  # Debugging
-            for page in person_pages:
-                produce_pages(page, "extract_data")
+            with open(file_path, "r", encoding="utf-8") as file:
+                data = json.load(file)
+            data.append(profile)
         else:
-            print(f"File not found: {file_path}")
+            data = [profile]
+
+        with open(file_path, "w", encoding="utf-8") as file:
+            json.dump(data, file, ensure_ascii=False, indent=4)
 
     consumer.close()
 
-topic_name = "parse_html"
+
+topic_name = "extract_data"
 consume_and_process(topic_name)
