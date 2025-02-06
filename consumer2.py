@@ -1,6 +1,9 @@
 from confluent_kafka import Consumer
-import os
 from extract_data import extract_profile_info
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+from dotenv import load_dotenv
+import os
 import json
 
 kafka_config = {
@@ -11,6 +14,10 @@ kafka_config = {
 
 consumer = Consumer(kafka_config)
 
+load_dotenv()
+client = MongoClient(os.getenv("MONGO_URI"), server_api=ServerApi('1'))
+db = client["profile_database"]
+collection = db["profiles"]
 
 def consume_and_process(topic):
     consumer.subscribe([topic])
@@ -26,16 +33,8 @@ def consume_and_process(topic):
         print(f"Calling extract_profile_info...")
         profile = extract_profile_info(msg.value().decode('utf-8'))
 
-        file_path = "output/data_profile.json"
-        if os.path.exists(file_path):
-            with open(file_path, "r", encoding="utf-8") as file:
-                data = json.load(file)
-            data.append(profile)
-        else:
-            data = [profile]
-
-        with open(file_path, "w", encoding="utf-8") as file:
-            json.dump(data, file, ensure_ascii=False, indent=4)
+        collection.insert_one(json.loads(profile))
+        print("Profile inserted into MongoDB")
 
     consumer.close()
 

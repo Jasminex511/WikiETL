@@ -1,6 +1,6 @@
 .env
 kafka-3.9.0-src.tgz
-kafka-3.9.0-src/
+kafka-3.9.0-src/*
 .venv/
 .DS_Store
 .idea/
