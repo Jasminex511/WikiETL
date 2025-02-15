@@ -21,15 +21,18 @@ def extract_profile_info(text):
     }}
     """
 
+    print("calling openai")
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system",
              "content": prompt},
-            {"role": "user", "content": text[:10000]}
+            {"role": "user", "content": text[:10000] + '}"'}
         ],
         temperature=0.5
     )
+
+    print(response)
 
     extracted_info = response["choices"][0]["message"]["content"]
 
