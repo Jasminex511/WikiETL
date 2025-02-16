@@ -11,10 +11,8 @@ class BaseProducer:
 
     def send_message(self, message):
         try:
-            # Convert dict to JSON string if it's a dict
             if isinstance(message, dict):
                 message = json.dumps(message)
-            # Now encode the string to bytes
             self.producer.produce(self.topic, value=message.encode('utf-8'))
             self.producer.flush()
             print(f"Message delivered to {self.topic}")

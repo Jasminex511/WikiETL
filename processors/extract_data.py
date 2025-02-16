@@ -11,11 +11,14 @@ def extract_profile_info(text):
     prompt = f"""
     Extract the following details from the text: name, spouse, birthdate, nationality, and keywords (separated by commas).
     For keywords, select the most relevant ones and maximum 5 keywords in total.
+    For birthdates:
+    - For dates after year 0, use YYYY-MM-DD format
+    - For BC dates, convert to negative years: e.g., 384 BC should be -0384-01-01
     Please format your response in JSON format like this:
     {{
         "name": "Name of the person",
         "spouse": "Spouse's name",
-        "birthdate": "Birthdate of the person",
+        "birthdate": "YYYY-MM-DD or -YYYY-MM-DD for BC dates",
         "nationality": "Nationality of the person",
         "keywords": "keyword1, keyword2, etc."
     }}
@@ -31,8 +34,6 @@ def extract_profile_info(text):
         ],
         temperature=0.5
     )
-
-    print(response)
 
     extracted_info = response["choices"][0]["message"]["content"]
 
