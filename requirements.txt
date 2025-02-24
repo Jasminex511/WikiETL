@@ -2,3 +2,5 @@ confluent-kafka==2.8.0
 openai==0.28.0
 pymongo==4.11
 python-dotenv==1.0.1
+pyspark==3.5.4
+pandas==2.2.3

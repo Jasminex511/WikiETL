@@ -1,8 +1,8 @@
 import time
 import signal
 import logging
+import threading
 from producers.html_producer import HtmlProducer
-from producers.person_producer import PersonProducer
 from consumers.html_consumer import HtmlConsumer
 from consumers.person_consumer import PersonConsumer
 from config.logging_config import setup_logging
@@ -21,6 +21,16 @@ signal.signal(signal.SIGINT, shutdown_handler)
 signal.signal(signal.SIGTERM, shutdown_handler)
 
 
+def run_html_consumer(html_consumer):
+    while running:
+        html_consumer.process_message()
+        time.sleep(1)
+
+def run_person_consumer(person_consumer):
+    while running:
+        person_consumer.process_message()
+        time.sleep(1)
+
 def main():
     person_consumer = PersonConsumer()
     html_consumer = HtmlConsumer()
@@ -30,10 +40,17 @@ def main():
 
     try:
         html_producer.produce_html_files("sample_html")
-        while running:
-            html_consumer.process_message()
-            person_consumer.process_message()
-            time.sleep(1)
+
+        # Running both consumers in separate threads
+        html_thread = threading.Thread(target=run_html_consumer, args=(html_consumer,))
+        person_thread = threading.Thread(target=run_person_consumer, args=(person_consumer,))
+
+        html_thread.start()
+        person_thread.start()
+
+        # Main thread waits for the threads to complete
+        html_thread.join()  # Will block until the html_consumer is finished
+        person_thread.join()  # Will block until the person_consumer is finished
 
     except Exception as e:
         logger.exception("Error in daemon")
