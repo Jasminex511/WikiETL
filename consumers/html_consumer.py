@@ -25,16 +25,18 @@ class HtmlConsumer(BaseConsumer):
             .option("kafka.bootstrap.servers", CONSUMER_CONFIG['bootstrap.servers']) \
             .option("subscribe", "html_topic") \
             .option("startingOffsets", "earliest") \
+            .option("failOnDataLoss", "false") \
+            .option("maxOffsetsPerTrigger", "10") \
             .load()
 
         file_paths_df = kafka_df.selectExpr("CAST(value AS STRING) AS file_path")
 
         extracted_pages_df = file_paths_df.withColumn("extracted_pages", extract_pages_spark_udf("file_path"))
         flattened_df = extracted_pages_df.withColumn("page", explode("extracted_pages")) \
-            .select("file_path", "page.page_title", "page.content")
+            .select("file_path", "page.title", "page.content")
 
         query = flattened_df.writeStream \
-            .option("checkpointLocation", "/tmp/spark_checkpoint/") \
+            .option("checkpointLocation", "./spark_checkpoint/") \
             .foreachBatch(self.process_batch) \
             .outputMode("append") \
             .start()
