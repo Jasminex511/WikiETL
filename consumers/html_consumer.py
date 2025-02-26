@@ -9,12 +9,8 @@ from config.settings import CONSUMER_CONFIG
 class HtmlConsumer(BaseConsumer):
 
     def __init__(self):
-        super().__init__(topic="html_topic")
+        super().__init__("HtmlConsumerSpark")
         self.producer = PersonProducer()
-        self.spark = SparkSession.builder\
-                .appName("HtmlConsumerSpark")\
-                .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0") \
-                .getOrCreate()
 
     def process_message(self):
         schema = ArrayType(StructType([

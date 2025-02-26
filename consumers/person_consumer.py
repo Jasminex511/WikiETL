@@ -1,20 +1,17 @@
-from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
 from pyspark.sql.functions import col, from_json
 from pydantic import ValidationError
 import json
+from consumers.base_consumer import BaseConsumer
 from processors.extract_data import extract_profile_info
 from utils.database import collection
 from utils.format import person
 from config.settings import CONSUMER_CONFIG
 
-class PersonConsumer:
+class PersonConsumer(BaseConsumer):
 
     def __init__(self):
-        self.spark = SparkSession.builder \
-            .appName("PersonConsumerSpark") \
-            .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0") \
-            .getOrCreate()
+        super().__init__("PersonConsumerSpark")
 
     def process_message(self):
 

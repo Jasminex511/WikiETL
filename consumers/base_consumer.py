@@ -1,12 +1,12 @@
-from confluent_kafka import Consumer
-from config.settings import CONSUMER_CONFIG
+from pyspark.sql import SparkSession
 
 class BaseConsumer:
 
-    def __init__(self, topic):
-        self.topic = topic
-        self.consumer = Consumer(CONSUMER_CONFIG)
-        self.consumer.subscribe([self.topic])
+    def __init__(self, appname):
+        self.spark = SparkSession.builder \
+            .appName(appname) \
+            .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0") \
+            .getOrCreate()
 
     def consume_message(self):
         msg = self.consumer.poll(1.0)
