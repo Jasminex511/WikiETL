@@ -1,2 +1,18 @@
-`producer.py` sends raw HTML to the `<parse_html>` Kafka topic, where `consumer.py` reads and parses it into individual person pages using `extract_pages.py`. \
-These pages are then sent to the `<extract_data>` topic by `producer2.py`. `consumer2.py` reads and processes each person page, calling `extract_data.py`, which uses an OpenAI LLM to extract key details. The extracted data is then stored in MongoDB.
+### **Workflow**
+1. **HTML Producer** (`HtmlProducer`)  
+   - Reads **HTML files** and sends them as messages to **Kafka topic `html_topic`**.
+   
+2. **HTML Consumer** (`HtmlConsumer`)  
+   - Listens to `html_topic` and extracts structured **pages** from HTML content.
+   - Sends extracted **pages** to Kafka topic `person_topic`.
+   
+3. **Person Consumer** (`PersonConsumer`)  
+   - Listens to `person_topic`, validates the extracted data, and stores it in **MongoDB**.
+
+---
+
+## **Architecture**
+```plaintext
+HtmlProducer
+--->  Kafka (html_topic)  --->  HtmlConsumer (extracts pages)
+--->  Kafka (person_topic)  --->  PersonConsumer (validates & stores in MongoDB)
