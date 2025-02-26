@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import udf, explode
-from pyspark.sql.types import ArrayType, MapType, StringType
-from processors.extract_pages import extract_person_pages
+from pyspark.sql.types import StructType, StructField, StringType, ArrayType
+from pyspark.sql.functions import explode, udf, col
+from processors.extract_pages import extract_pages_spark
 from consumers.base_consumer import BaseConsumer
 from producers.person_producer import PersonProducer
 from config.settings import CONSUMER_CONFIG
@@ -17,26 +17,33 @@ class HtmlConsumer(BaseConsumer):
                 .getOrCreate()
 
     def process_message(self):
-        schema = ArrayType(MapType(StringType(), StringType()))
-        extract_pages_spark_udf = udf(extract_person_pages, schema)
+        schema = ArrayType(StructType([
+            StructField("file_path", StringType(), True),
+            StructField("title", StringType(), True),
+            StructField("content", StringType(), True)
+        ]))
+
+        extract_pages_spark_udf = udf(extract_pages_spark, schema)
 
         kafka_df = self.spark.readStream \
             .format("kafka") \
             .option("kafka.bootstrap.servers", CONSUMER_CONFIG['bootstrap.servers']) \
             .option("subscribe", "html_topic") \
-            .option("startingOffsets", "earliest") \
             .option("failOnDataLoss", "false") \
-            .option("maxOffsetsPerTrigger", "10") \
             .load()
 
         file_paths_df = kafka_df.selectExpr("CAST(value AS STRING) AS file_path")
 
-        extracted_pages_df = file_paths_df.withColumn("extracted_pages", extract_pages_spark_udf("file_path"))
-        flattened_df = extracted_pages_df.withColumn("page", explode("extracted_pages")) \
-            .select("file_path", "page.title", "page.content")
+        flat_df = file_paths_df.withColumn("page", explode(extract_pages_spark_udf("file_path")))
 
-        query = flattened_df.writeStream \
-            .option("checkpointLocation", "./spark_checkpoint/") \
+        final_df = flat_df.select(
+            col("page.file_path"),
+            col("page.title"),
+            col("page.content")
+        )
+
+        query = final_df.writeStream \
+            .option("checkpointLocation", "./spark_checkpoint/html_consumer/")\
             .foreachBatch(self.process_batch) \
             .outputMode("append") \
             .start()
@@ -47,7 +54,7 @@ class HtmlConsumer(BaseConsumer):
         for row in batch_df.collect():
             message = {
                 "file_path": row.file_path,
-                "page_title": row.page_title,
+                "title": row.title,
                 "content": row.content
             }
             self.producer.produce_person(message)

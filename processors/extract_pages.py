@@ -3,15 +3,11 @@ import re
 
 def extract_person_pages(html_path):
     namespaces = {'mediawiki': 'http://www.mediawiki.org/xml/export-0.11/'}
-    result = []
 
     with open(html_path, "r", encoding="utf-8") as file:
         context = ET.iterparse(file, events=("start", "end"))
 
-        i = 1
         for event, elem in context:
-            if i > 3:
-                break
             if event == "end" and elem.tag == f"{{{namespaces['mediawiki']}}}page":
                 title = ""
                 text = ""
@@ -24,15 +20,14 @@ def extract_person_pages(html_path):
                             if subchild.tag == f"{{{namespaces['mediawiki']}}}text":
                                 text = subchild.text
 
-                if text:
-                    if re.search(r"birth_date", text):
-                        result.append({
-                            'title': title,
-                            'content': text
-                        })
-                        print(f"Extracted {title}")
-                        i += 1
+                if text and re.search(r"birth_date", text):
+                    print(f"Extracted {title}")
+                    yield {
+                        'title': title,
+                        'content': text
+                    }
 
                 elem.clear()
 
-    return result
+def extract_pages_spark(file_path):
+    return [(file_path, p["title"], p["content"]) for p in extract_person_pages(file_path)]
